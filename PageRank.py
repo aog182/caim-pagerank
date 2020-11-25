@@ -10,6 +10,8 @@ import time
 FILE_AIRPORTS = 'data/airports.txt' 
 FILE_ROUTES = 'data/routes.txt'
 
+DAMPING_FACTOR = 0.85   # between 0 and 1 (normally between 0.8 and 0.9)
+
 # ============================================================================ #
 
 class Route:
@@ -194,7 +196,41 @@ def readRoutes(file):
     printMsg('read '+str(count)+' routes with IATA codes')
 
 def computePageRanks():
-    pass
+
+    printMsg('computing pagerank') # VERBOSE
+
+    # here we apply statement's pseudocode
+
+    n = len(airportList)
+    P = [1/n] * n
+    L = DAMPING_FACTOR
+
+    iters = 0
+    stop = False
+
+    while not stop:
+        Q = [0] * n
+
+        for i in range(n):
+            airport = airportList[i]
+            
+            summation = 0
+            for route in airport.routes:
+                index = route.index
+                weight = route.weight
+                outweight = airportList[index].outweight
+                summation += P[index]*weight / outweight
+
+            Q[i] = L*summation + (1-L)/n
+
+        value = [a_i - b_i for a_i, b_i in zip(P, Q)]
+        absVal = map(lambda val: abs(val), value)
+        stop = all(map(lambda val: val < 1 * 10**(-15), absVal))
+
+        P = Q
+        iters += 1
+    
+    return iters
 
 def outputPageRanks():
     pass
@@ -205,16 +241,14 @@ def main(argv=None):
 
     readAirports(FILE_AIRPORTS)
     readRoutes(FILE_ROUTES)
-
-    sys.exit(0) # TEMPORARY
     
     time1 = time.time()
     iterations = computePageRanks()
     time2 = time.time()
     outputPageRanks()
     
-    print("#Iterations:", iterations)
-    print("Time of computePageRanks():", time2-time1)
+    printMsg('iterations done: '+str(iterations))
+    printMsg('time spent: '+str(time2-time1))
 
 if __name__ == "__main__":
     
