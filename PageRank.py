@@ -11,6 +11,7 @@ FILE_AIRPORTS = 'data/airports.txt'
 FILE_ROUTES = 'data/routes.txt'
 
 DAMPING_FACTOR = 0.85   # between 0 and 1 (normally between 0.8 and 0.9)
+DECIMAL_VALUE = 10**(-12)
 
 # ============================================================================ #
 
@@ -20,7 +21,7 @@ class Route:
         
         self.origin = origin
         self.index = index
-        self.weight = 1
+        self.weight = 1.0
 
     def __repr__(self):
         
@@ -54,7 +55,7 @@ class Airport:
         self.routes = []
         self.routeHash = dict()
         
-        self.outweight = 0
+        self.outweight = 0.0
     
     def __repr__(self):
         
@@ -182,7 +183,7 @@ def readRoutes(file):
             airpO = getAirport(codeO)
             airpD = getAirport(codeD)
 
-            airpO.outweight += 1
+            airpO.outweight += 1.0
             airpD.addRoute(codeO)
         
         except Exception:
@@ -202,14 +203,18 @@ def computePageRanks():
     # here we apply statement's pseudocode
 
     n = len(airportList)
-    P = [1/n] * n
+    P = [1.0/n] * n
     L = DAMPING_FACTOR
+
+    nO = len(list(filter(lambda n: n.outweight == 0.0, airportList)))
+    numOut = L/float(n-1) * nO
+    aux = 1.0/n
 
     iters = 0
     stop = False
 
     while not stop:
-        Q = [0] * n
+        Q = [0.0] * n
 
         for i in range(n):
             airport = airportList[i]
@@ -221,19 +226,40 @@ def computePageRanks():
                 outweight = airportList[index].outweight
                 summation += P[index]*weight / outweight
 
-            Q[i] = L*summation + (1-L)/n
+            Q[i] = L*summation + (1.0-L)/n + numOut*aux
 
-        value = [a_i - b_i for a_i, b_i in zip(P, Q)]
+        aux = (1.0-L)/n + numOut*aux
+
+        value = [a - b for a, b in zip(P, Q)]
         absVal = map(lambda val: abs(val), value)
-        stop = all(map(lambda val: val < 1 * 10**(-15), absVal))
+        stop = all(map(lambda val: val < 1 * DECIMAL_VALUE, absVal))
 
         P = Q
         iters += 1
     
+    global pageRank
+    pageRank = P.copy()
     return iters
 
 def outputPageRanks():
-    pass
+    
+    printMsg('printing pagerank results: (pagerank, airport name)')
+
+    ls = []
+    i = 0
+    for k in airportHash:
+        a = airportHash[k]
+        x = (pageRank[i], a.name)
+        ls.append(x)
+        i += 1
+        
+    ls.sort(key=lambda x: x[0], reverse=True)
+
+    s = '============================================================================\n'
+    for (x,y) in ls:
+        s += ("(%s : %s)\n"%(x, y))
+    s += '============================================================================'
+    print(s)
 
 # ============================================================================ #
 
