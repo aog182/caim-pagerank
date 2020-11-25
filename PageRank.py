@@ -3,107 +3,122 @@
 # ============================================================================ #
 
 from collections import namedtuple
-import time
 import sys
+import time
+
+# ============================================================================ #
+
+FILE_AIRPORTS = 'data/airports.txt' 
+FILE_ROUTES = 'data/routes.txt'
 
 # ============================================================================ #
 
 class Edge:
 
     def __init__(self, origin=None):
-        self.origin = 0 # write appropriate value
-        self.weight = 0 # write appropriate value
+
+        self.origin = 0 # ADJUSTABLE
+        self.weight = 0 # ADJUSTABLE
 
     def __repr__(self):
+
         return "edge: {0} {1}".format(self.origin, self.weight)
-    
-    # TODO #
 
 
 class Airport:
 
     def __init__(self, iden=None, name=None):
+
         self.code = iden
         self.name = name
         self.routes = []
         self.routeHash = dict()
-        self.outweight = 0 # write appropriate value
-        
+        self.outweight = 0 # ADJUSTABLE
+    
     def __repr__(self):
+        
         return f"{self.code}\t{self.pageIndex}\t{self.name}"
     
-    # airport code getter
     def getCode(self):
+        
         return self.code
     
     # debug function in case we need to print airport attributes
     def print(self):
+
         print('Airport:')
         print('  - code:', self.code)
         print('  - name:', self.name)
         print('  - routes:', self.routes)
         print('  - routeHash:', self.routeHash)
         print('  - outweight:', self.outweight)
-        
-    # TODO #
 
 # ============================================================================ #
 
 edgeList = []           # list of Edge
 edgeHash = dict()       # hash of edge to ease the match
+
 airportList = []        # list of Airport
-airportHash = dict()    # hash key IATA code -> Airport
+airportHash = dict()	# hash key IATA code -> Airport
 
 # ============================================================================ #
 
-def readAirports(fd):
-    print("Reading Airport file from {0}".format(fd))
-    airportsTxt = open(fd, "r");
-    cont = 0
+def printMsg(msg):
+    
+    print('[pagerank]', msg)
+
+
+def readAirports(file):
+
+    printMsg('reading airports from '+file) # VERBOSE
+    
+    airportsTxt = open(file, "r")
+    
+    count = 0
     for line in airportsTxt.readlines():
-        a = Airport()
+        airport = Airport()
         try:
             temp = line.split(',')
             if len(temp[4]) != 5 :
                 raise Exception('not an IATA code')
-            a.name=temp[1][1:-1] + ", " + temp[3][1:-1]
-            a.code=temp[4][1:-1]
+            airport.name=temp[1][1:-1] + ", " + temp[3][1:-1]
+            airport.code=temp[4][1:-1]
+        
         except Exception as inst:
             pass
+        
         else:
-            cont += 1
-            airportList.append(a)
-            airportHash[a.code] = a
+            count += 1
+            airportList.append(airport)
+            airportHash[airport.code] = airport
+    
     airportsTxt.close()
-    print(f"There were {cont} Airports with IATA code")
+    
+    printMsg('read '+str(count)+' aiports with IATA code') # VERBOSE
 
 
-def readRoutes(fd):
-    print("Reading Routes file from {fd}")
-    routesTxt = open(fd, "r")
-    cont = 0
-    for line in routesTxt.readLines():
-        try:
-            tmp = line.split(',')
-            # TODO #
-    return
+def readRoutes(file):
+    pass
 
 
 def computePageRanks():
-    return
+    pass
 
 
 def outputPageRanks():
-    return
+    pass
 
 # ============================================================================ #
 
 def main(argv=None):
 
-    readAirports("airports.txt")
-    # readRoutes("routes.txt")
+    readAirports(FILE_AIRPORTS)
+    readRoutes(FILE_ROUTES)
+
+    airportList[0].print() # DEBUG
+    airportHash[airportList[0].code].print() # DEBUG
     
-    sys.exit(0)
+    sys.exit(0) # DEBUG
     
     time1 = time.time()
     iterations = computePageRanks()
@@ -115,4 +130,5 @@ def main(argv=None):
 
 
 if __name__ == "__main__":
+    
     sys.exit(main())
